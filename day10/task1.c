@@ -20,5 +20,5 @@ int main(void)
 printf("my variant: %d\n",count);
 printf("strlen(): %zu\n",strlen(word));
 
-
+ 
 }
