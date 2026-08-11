@@ -10,8 +10,10 @@ int main(void)
 
     if(msg[strlen(msg)-1] == '\n')
     msg[strlen(msg)-1] = '\0';
+    int len = strlen(msg);
 
-    for (int  i = strlen(msg)-1; i >= 0;i--)
+
+    for (int  i = len - 1; i >= 0;i--)
     {
         printf("%c",msg[i]);
     }
