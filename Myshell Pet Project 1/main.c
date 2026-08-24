@@ -1,7 +1,8 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
 int main(void)
 {
@@ -13,7 +14,11 @@ int main(void)
     printf("%s>", cwd);
 
     char line[256];
-    fgets(line, sizeof(line), stdin);
+    if (fgets(line, sizeof(line), stdin) == NULL)
+    {
+      printf("\n");
+      break;
+    }
 
     if (line[strlen(line) - 1] == '\n')
       line[strlen(line) - 1] = '\0';
@@ -29,34 +34,51 @@ int main(void)
       i++;
       token = strtok(NULL, " ");
     }
+    args[i] = NULL;
 
     if (i > 0 && strcmp(args[0], "exit") == 0)
       break;
-    
-    for (int j = 0; j < i; j++)
-    {
-      printf("%s\n", args[j]);
-    }
 
-    if(i>0 && strcmp(args[0], "Fork") == 0)
+    if (args[0] == NULL)
+      continue;
+
+    if (i > 0 && strcmp(args[0], "cd") == 0)
     {
-        fflush(stdout);
+      if (args[1] == NULL)
+      {
+        char *home = getenv("HOME");
+        if (home != NULL)
+        {
+          chdir(home);
+        }
+      }
+      else if (args[1] != NULL)
+      {
+        int result = chdir(args[1]);
+        if (result == -1)
+        {
+          perror("cd");
+        }
+        continue;
+      }
+    }
+    else
+    {
+      if (i > 0)
+      {
         int PID = fork();
 
-        if(PID == 0)
+        if (PID == 0)
         {
-            printf("Child PID:%d\n",PID);
-            break;
+          execvp(args[0], args);
+          perror("execvp");
+          exit(1);
         }
         else
         {
-            printf("I am Father PID of my child:%d\n",PID);
-            wait(NULL);
+          waitpid(PID, NULL, 0);
         }
-
+      }
     }
-
-    
-
   }
 }
