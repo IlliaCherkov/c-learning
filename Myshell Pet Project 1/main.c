@@ -44,25 +44,27 @@ void history_free(history *k)
 
 typedef struct
 {
-  int capacity_args;
-  int count_args;
+  int capacity;
+  int count;
   char **args;
 } arguments;
 
 void arguments_init(arguments *m)
 {
-  m->count_args = 0;
-  m->capacity_args = 2;
-  m->args = malloc(m->capacity_args * sizeof(char *));
+  m->count = 0;
+  m->capacity = 2;
+  m->args = malloc(m->capacity * sizeof(char *));
 }
 
-void arguments_add(arguments *c)
+void arguments_add(arguments *c, char *token)
 {
-  if (c->count_args == c->capacity_args)
+  if ((c->capacity - c->count) <= 1)
   {
-    c->capacity_args *= 2;
-    c->args = realloc(c->args, c->capacity_args * sizeof(char *));
+    c->capacity *= 2;
+    c->args = realloc(c->args, c->capacity * sizeof(char *));
   }
+  c->args[c->count] = token;
+  c->count++;
 }
 
 void arguments_free(arguments *n)
@@ -81,7 +83,7 @@ int main(void)
 
   while (1)
   {
-    cmd.count_args = 0;
+    cmd.count = 0;
 
     char cwd[256];
     getcwd(cwd, sizeof(cwd));
@@ -99,21 +101,16 @@ int main(void)
 
     history_add(&hist, line);
 
-  
     char *token = strtok(line, " ");
 
     while (token != NULL)
     {
-      arguments_add(&cmd);
-
-      cmd.args[cmd.count_args] = token;
-      cmd.count_args++;
+      arguments_add(&cmd, token);
       token = strtok(NULL, " ");
     }
-    arguments_add(&cmd);
-    cmd.args[cmd.count_args] = NULL;
+    cmd.args[cmd.count] = NULL;
 
-    if (cmd.count_args > 0 && strcmp(*cmd.args, "exit") == 0)
+    if (cmd.count > 0 && strcmp(*cmd.args, "exit") == 0)
     {
       FILE *f = fopen("log.txt", "w");
 
@@ -122,15 +119,15 @@ int main(void)
         printf("%s\n", hist.commands[z]);
         fprintf(f, "%s\n", hist.commands[z]);
       }
-      
+
       fclose(f);
 
       history_free(&hist);
       arguments_free(&cmd);
       break;
     }
-    
-    if (cmd.count_args > 0 && strcmp(*cmd.args, "cd") == 0)
+
+    if (cmd.count > 0 && strcmp(*cmd.args, "cd") == 0)
     {
       if (cmd.args[1] == NULL)
       {
@@ -152,7 +149,7 @@ int main(void)
     }
     else
     {
-      if (cmd.count_args > 0)
+      if (cmd.count > 0)
       {
         int pid = fork();
 
