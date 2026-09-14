@@ -83,6 +83,8 @@ int main(void)
   arguments cmd;
   arguments_init(&cmd);
 
+  signal(SIGTTOU,SIG_IGN);
+
   while (1)
   {
     cmd.count = 0;
@@ -157,13 +159,17 @@ int main(void)
 
         if (pid == 0)
         {
+          setpgid(pid,pid);
           execvp(cmd.args[0], cmd.args);
           perror("execvp");
           exit(1);
         }
         else
         {
+          setpgid(pid,pid);
+          tcsetpgrp(STDIN_FILENO,pid);
           waitpid(pid, NULL, 0);
+          tcsetpgrp(STDIN_FILENO,getpgrp());
         }
       }
     }
@@ -222,9 +228,29 @@ char *my_strtok(char *str, const char *delim, const char *quotes)
     }
   }
   char *token_end = token_start;
+  char *token_write = token_end;
 
   while (*token_end != '\0')
   {
+
+    if (*token_end == '\\')
+    {
+      token_end++;
+      if(*token_end == '\0')
+      {
+        *token_write = *token_end;
+        last_pos = token_end;
+        return token_start;
+      }
+      else
+      {
+      *token_write = *token_end;
+      token_end++;
+      token_write++;
+      continue;
+      }
+    }
+
     int is_delim = 0;
     for (int i = 0; delim[i] != '\0'; i++)
     {
@@ -241,13 +267,15 @@ char *my_strtok(char *str, const char *delim, const char *quotes)
     }
     if (is_delim)
     {
-      *token_end = '\0';
+      *token_write = '\0';
       last_pos = token_end + 1;
       return token_start;
     }
+    *token_write = *token_end;
+    token_write++;
     token_end++;
   }
-
+  *token_write = *token_end;
   last_pos = token_end;
   return token_start;
 }
