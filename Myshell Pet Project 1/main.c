@@ -122,10 +122,10 @@ int main(void)
     if (fgets(line, sizeof(line), stdin) == NULL)
     {
       printf("\n");
-     break;
-   }
-    if(strcmp(line,"\n") == 0)
-    continue;
+      break;
+    }
+    if (strcmp(line, "\n") == 0)
+      continue;
 
     if (line[strlen(line) - 1] == '\n')
       line[strlen(line) - 1] = '\0';
@@ -143,14 +143,14 @@ int main(void)
 
     if (cmd.count > 0 && strcmp(*cmd.args, "exit") == 0)
     {
-      
+
       break;
     }
-    if(cmd.count > 0 && strcmp(*cmd.args, "history") == 0)
+    if (cmd.count > 0 && strcmp(*cmd.args, "history") == 0)
     {
-      for(int j = 0; j < hist.count;j++)
+      for (int j = 0; j < hist.count; j++)
       {
-        printf("%s\n",hist.commands[j]);
+        printf("%s\n", hist.commands[j]);
       }
       continue;
     }
@@ -205,26 +205,26 @@ int main(void)
     }
   }
   FILE *f = fopen("log.txt", "w");
-      if (f == NULL)
-      {
-        perror("Writing to the log");
-        for (int z = 0; z < hist.count; z++)
-        {
-          printf("%s\n", hist.commands[z]);
-        }
-      }
-      else
-      {
-        for (int z = 0; z < hist.count; z++)
-        {
-          printf("%s\n", hist.commands[z]);
-          fprintf(f, "%s\n", hist.commands[z]);
-        }
-        fclose(f);
-      }
+  if (f == NULL)
+  {
+    perror("Writing to the log");
+    for (int z = 0; z < hist.count; z++)
+    {
+      printf("%s\n", hist.commands[z]);
+    }
+  }
+  else
+  {
+    for (int z = 0; z < hist.count; z++)
+    {
+      printf("%s\n", hist.commands[z]);
+      fprintf(f, "%s\n", hist.commands[z]);
+    }
+    fclose(f);
+  }
 
-      history_free(&hist);
-      arguments_free(&cmd);
+  history_free(&hist);
+  arguments_free(&cmd);
 }
 
 char *my_strtok(char *str, const char *delim, const char *quotes)
