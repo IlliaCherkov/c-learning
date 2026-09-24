@@ -1,3 +1,4 @@
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -18,6 +19,11 @@ void history_init(history *h)
   h->capacity = 4;
   h->count = 0;
   h->commands = malloc(h->capacity * sizeof(char *));
+  if (h->commands == NULL)
+  {
+    fprintf(stderr, "malloc failed in history_init\n");
+    exit(1);
+  }
 }
 
 void history_add(history *h, char *cmd)
@@ -25,9 +31,20 @@ void history_add(history *h, char *cmd)
   if (h->count == h->capacity)
   {
     h->capacity *= 2;
-    h->commands = realloc(h->commands, h->capacity * sizeof(char *));
+    char **tmp = realloc(h->commands, h->capacity * sizeof(char *));
+    if (tmp == NULL)
+    {
+      fprintf(stderr, "realloc failed in history_add\n");
+      return;
+    }
+    h->commands = tmp;
   }
   h->commands[h->count] = malloc(strlen(cmd) + 1);
+  if (h->commands[h->count] == NULL)
+  {
+    fprintf(stderr, "malloc failed in history_add\n");
+    return;
+  }
   strcpy(h->commands[h->count], cmd);
   h->count++;
 }
@@ -45,7 +62,11 @@ void history_free(history *k)
 }
 void history_load(history *h)
 {
-  FILE *f = fopen("log.txt", "r");
+  char history_path[512];
+  snprintf(history_path, sizeof(history_path), "%s/.myshell_history",
+           getenv("HOME"));
+
+  FILE *f = fopen(history_path, "r");
   if (f == NULL)
   {
     printf("We donot have file\n");
@@ -77,6 +98,11 @@ void arguments_init(arguments *m)
   m->count = 0;
   m->capacity = 2;
   m->args = malloc(m->capacity * sizeof(char *));
+  if (m->args == NULL)
+  {
+    fprintf(stderr, "malloc failed in arguments_init\n");
+    exit(1);
+  }
 }
 
 void arguments_add(arguments *c, char *token)
@@ -84,7 +110,13 @@ void arguments_add(arguments *c, char *token)
   if ((c->capacity - c->count) <= 1)
   {
     c->capacity *= 2;
-    c->args = realloc(c->args, c->capacity * sizeof(char *));
+    char **tmp = realloc(c->args, c->capacity * sizeof(char *));
+    if (tmp == NULL)
+    {
+      fprintf(stderr, "realloc failed in arguments_add\n");
+      return;
+    }
+    c->args = tmp;
   }
   c->args[c->count] = token;
   c->count++;
@@ -132,7 +164,7 @@ int main(void)
 
     history_add(&hist, line);
 
-    char *token = my_strtok(line, " ", "\",\'");
+    char *token = my_strtok(line, " ", "\"\'");
 
     while (token != NULL)
     {
@@ -204,7 +236,11 @@ int main(void)
       }
     }
   }
-  FILE *f = fopen("log.txt", "w");
+
+  char history_path[512];
+  snprintf(history_path, sizeof(history_path), "%s/.myshell_history",
+           getenv("HOME"));
+  FILE *f = fopen(history_path, "w");
   if (f == NULL)
   {
     perror("Writing to the log");
