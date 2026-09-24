@@ -43,6 +43,27 @@ void history_free(history *k)
   free(k->commands);
   k->commands = NULL;
 }
+void history_load(history *h)
+{
+  FILE *f = fopen("log.txt", "r");
+  if (f == NULL)
+  {
+    printf("We donot have file\n");
+  }
+  else
+  {
+    char buf[256];
+    printf("We have file\n");
+    while (fgets(buf, sizeof(buf), f) != NULL)
+    {
+      if (buf[strlen(buf) - 1] == '\n')
+        buf[strlen(buf) - 1] = '\0';
+
+      history_add(h, buf);
+    }
+    fclose(f);
+  }
+}
 
 typedef struct
 {
@@ -78,15 +99,19 @@ void arguments_free(arguments *n)
 
 int main(void)
 {
+
   history hist;
   history_init(&hist);
+  history_load(&hist);
+
   arguments cmd;
   arguments_init(&cmd);
 
-  signal(SIGTTOU,SIG_IGN);
+  signal(SIGTTOU, SIG_IGN);
 
   while (1)
   {
+
     cmd.count = 0;
 
     char cwd[256];
@@ -97,8 +122,10 @@ int main(void)
     if (fgets(line, sizeof(line), stdin) == NULL)
     {
       printf("\n");
-      break;
-    }
+     break;
+   }
+    if(strcmp(line,"\n") == 0)
+    continue;
 
     if (line[strlen(line) - 1] == '\n')
       line[strlen(line) - 1] = '\0';
@@ -110,25 +137,28 @@ int main(void)
     while (token != NULL)
     {
       arguments_add(&cmd, token);
-      token = my_strtok(NULL, " ", "\",\'");
+      token = my_strtok(NULL, " ", "\"\'");
     }
     cmd.args[cmd.count] = NULL;
 
     if (cmd.count > 0 && strcmp(*cmd.args, "exit") == 0)
     {
-      FILE *f = fopen("log.txt", "w");
-
-      for (int z = 0; z < hist.count; z++)
-      {
-        printf("%s\n", hist.commands[z]);
-        fprintf(f, "%s\n", hist.commands[z]);
-      }
-
-      fclose(f);
-
-      history_free(&hist);
-      arguments_free(&cmd);
+      
       break;
+    }
+    if(cmd.count > 0 && strcmp(*cmd.args, "history") == 0)
+    {
+      for(int j = 0; j < hist.count;j++)
+      {
+        printf("%s\n",hist.commands[j]);
+      }
+      continue;
+    }
+    if (cmd.count > 0 && strcmp(*cmd.args, "history_clear") == 0)
+    {
+      history_free(&hist);
+      history_init(&hist);
+      continue;
     }
 
     if (cmd.count > 0 && strcmp(*cmd.args, "cd") == 0)
@@ -159,21 +189,42 @@ int main(void)
 
         if (pid == 0)
         {
-          setpgid(pid,pid);
+          setpgid(pid, pid);
           execvp(cmd.args[0], cmd.args);
           perror("execvp");
           exit(1);
         }
         else
         {
-          setpgid(pid,pid);
-          tcsetpgrp(STDIN_FILENO,pid);
+          setpgid(pid, pid);
+          tcsetpgrp(STDIN_FILENO, pid);
           waitpid(pid, NULL, 0);
-          tcsetpgrp(STDIN_FILENO,getpgrp());
+          tcsetpgrp(STDIN_FILENO, getpgrp());
         }
       }
     }
   }
+  FILE *f = fopen("log.txt", "w");
+      if (f == NULL)
+      {
+        perror("Writing to the log");
+        for (int z = 0; z < hist.count; z++)
+        {
+          printf("%s\n", hist.commands[z]);
+        }
+      }
+      else
+      {
+        for (int z = 0; z < hist.count; z++)
+        {
+          printf("%s\n", hist.commands[z]);
+          fprintf(f, "%s\n", hist.commands[z]);
+        }
+        fclose(f);
+      }
+
+      history_free(&hist);
+      arguments_free(&cmd);
 }
 
 char *my_strtok(char *str, const char *delim, const char *quotes)
@@ -236,7 +287,7 @@ char *my_strtok(char *str, const char *delim, const char *quotes)
     if (*token_end == '\\')
     {
       token_end++;
-      if(*token_end == '\0')
+      if (*token_end == '\0')
       {
         *token_write = *token_end;
         last_pos = token_end;
@@ -244,10 +295,10 @@ char *my_strtok(char *str, const char *delim, const char *quotes)
       }
       else
       {
-      *token_write = *token_end;
-      token_end++;
-      token_write++;
-      continue;
+        *token_write = *token_end;
+        token_end++;
+        token_write++;
+        continue;
       }
     }
 
