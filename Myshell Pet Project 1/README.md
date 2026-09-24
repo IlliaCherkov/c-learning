@@ -1,36 +1,51 @@
-Myshell **This project is still under active development — not all planned features are implemented yet.*
+# Myshell
+
+*Work in progress — not all planned features are implemented yet.*
 
 A Unix shell built from scratch in C.
 
-What it can do:
+## What it can do
 
- Runs commands like ls, pwd, mkdir, etc.
+- Runs any program on your system, like `ls`, `pwd`, `mkdir`, `git` (using `fork()` + `execvp()` + `waitpid()`)
+- `cd` to change directories (plain `cd` goes to your home directory)
+- Understands quotes, so `mkdir "two words"` creates one folder, not two
+- Backslash escaping: `mkdir two\ words` does the same thing
+- No fixed limit on how many arguments a command can have
+- Command history:
+  - loaded from `log.txt` when the shell starts, so it survives between sessions
+  - saved back to `log.txt` when you type `exit` or press `Ctrl+D`
+  - `history` prints it, `history_clear` wipes it
+  - empty lines are not saved
+- `Ctrl+C` while a command is running stops only that command, the shell keeps going (each command runs in its own process group)
+- All memory is freed on exit, checked with AddressSanitizer: no leaks
 
- "cd" to change directories (plain cd goes to home directory)
+## Build & run
 
- Understands quotes, so mkdir "two words" works as one argument, not two
-
- Keeps a history of commands, saved to log.txt when you  write command "exit"
-
- No fixed limit on how many arguments a command can have
-
-Build & run:
-bash
-
+```bash
 gcc main.c -o main
-
 ./main
+```
 
-OR
+Or with warnings and AddressSanitizer (what I use while developing):
 
+```bash
 gcc -Wall -Wextra -g -fsanitize=address main.c -o main
-
 ./main
+```
 
-Not yet done:
-Pipes (|),
-Redirection (>, <),
-Background processes (&),
-Backslash escaping.
+## Known issues
+
+- `Ctrl+C` on an empty prompt closes the shell itself
+- `log.txt` is read and written in the current directory, so after a `cd` the history gets saved to a different folder
+- Arrow keys print raw escape codes instead of scrolling through history
+- One input line is limited to about 255 characters
+
+## Not done yet
+
+- Pipes (`|`)
+- Redirection (`>`, `<`)
+- Background processes (`&`)
+- Variable expansion (`$HOME`, `$?`), wildcards, aliases
+- Tab completion
 
 GL&HF.
