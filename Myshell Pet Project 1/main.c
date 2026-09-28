@@ -60,30 +60,33 @@ void history_free(history *k)
   free(k->commands);
   k->commands = NULL;
 }
+int get_history_path(char *n, int size)
+{
+  char *gete = getenv("HOME");
+  if (gete == NULL)
+    return 0;
+  snprintf(n, size, "%s/.myshell_history", gete);
+  return 1;
+}
 void history_load(history *h)
 {
   char history_path[512];
-  snprintf(history_path, sizeof(history_path), "%s/.myshell_history",
-           getenv("HOME"));
+  if (get_history_path(history_path, sizeof(history_path)) == 0)
+    return;
 
   FILE *f = fopen(history_path, "r");
   if (f == NULL)
-  {
-    printf("We donot have file\n");
-  }
-  else
-  {
-    char buf[256];
-    printf("We have file\n");
-    while (fgets(buf, sizeof(buf), f) != NULL)
-    {
-      if (buf[strlen(buf) - 1] == '\n')
-        buf[strlen(buf) - 1] = '\0';
+    return;
 
-      history_add(h, buf);
-    }
-    fclose(f);
+  char buf[256];
+  while (fgets(buf, sizeof(buf), f) != NULL)
+  {
+    if (buf[strlen(buf) - 1] == '\n')
+      buf[strlen(buf) - 1] = '\0';
+
+    history_add(h, buf);
   }
+  fclose(f);
 }
 
 typedef struct
@@ -236,27 +239,27 @@ int main(void)
       }
     }
   }
+  for (int z = 0; z < hist.count; z++)
+  {
+    printf("%s\n", hist.commands[z]);
+  }
 
   char history_path[512];
-  snprintf(history_path, sizeof(history_path), "%s/.myshell_history",
-           getenv("HOME"));
-  FILE *f = fopen(history_path, "w");
-  if (f == NULL)
+  if (get_history_path(history_path, sizeof(history_path)) == 1)
   {
-    perror("Writing to the log");
-    for (int z = 0; z < hist.count; z++)
+    FILE *f = fopen(history_path, "w");
+    if (f == NULL)
     {
-      printf("%s\n", hist.commands[z]);
+      perror("Writing to the log");
     }
-  }
-  else
-  {
-    for (int z = 0; z < hist.count; z++)
+    else
     {
-      printf("%s\n", hist.commands[z]);
-      fprintf(f, "%s\n", hist.commands[z]);
+      for (int z = 0; z < hist.count; z++)
+      {
+        fprintf(f, "%s\n", hist.commands[z]);
+      }
+      fclose(f);
     }
-    fclose(f);
   }
 
   history_free(&hist);
