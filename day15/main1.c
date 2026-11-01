@@ -130,13 +130,39 @@ void delete_first(Node **head)
   free(current);
   *head = next;
 }
+// task 6;
+
+int get_at(Node *head, int value, int *data)
+{
+  Node *current = head;
+  int count = 0;
+  while (count != value)
+  {
+    count++;
+    if (current == NULL)
+    {
+      break;
+    }
+    current = current->next;
+  }
+  if (current == NULL)
+  {
+    return 0;
+  }
+  else
+  {
+    *data = current->data;
+
+    return 1;
+  }
+}
 
 int main(void)
 {
 
-  int x = 9;
-  int y = 2;
-  int z = 5;
+  int x = 3;
+  int y = 7;
+  int z = 1;
   int i = 1;
   int t = 2;
   int c = 3;
@@ -144,13 +170,13 @@ int main(void)
   Node *f = NULL;
 
   append(&f, x);
-  //append(&f, y);
-  //append(&f, z);
-  //prepend(&f, i);
-  //prepend(&f, t);
-  //prepend(&f, c);
+  append(&f, y);
+  append(&f, z);
+  // prepend(&f, i);
+  // prepend(&f, t);
+  // prepend(&f, c);
 
-  delete_first(&f);
+  // delete_first(&f);
 
   Node *max = max_value(f);
 
@@ -168,5 +194,16 @@ int main(void)
   {
     printf("max number : %d\n", max->data);
   }
+
+  int result = 0;
+  if (get_at(f, 2, &result) == 1)
+  {
+    printf("Result :%d\n", result);
+  }
+  else
+  {
+    printf("we don`t have such number=(\n");
+  }
+
   free_list(&f);
 }
