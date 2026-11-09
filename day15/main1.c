@@ -157,13 +157,46 @@ int get_at(Node *head, int value, int *data)
   }
 }
 
+// task 7 delete_value
+
+void delete_value(Node **head, int value)
+{
+  if (*head == NULL)
+    return;
+
+  Node *current = *head;
+
+  if (current->data == value)
+  {
+    delete_first(head);
+    return;
+  }
+
+  Node *next = current->next;
+  while (next != NULL && next->data != value)
+  {
+    current = current->next;
+    next = current->next;
+  }
+  if (next == NULL)
+  {
+
+    return;
+  }
+  else
+  {
+    current->next = next->next;
+    free(next);
+  }
+}
+
 int main(void)
 {
 
   int x = 3;
   int y = 7;
   int z = 1;
-  int i = 1;
+  int i = 5;
   int t = 2;
   int c = 3;
 
@@ -172,11 +205,14 @@ int main(void)
   append(&f, x);
   append(&f, y);
   append(&f, z);
-  // prepend(&f, i);
+  append(&f, i);
   // prepend(&f, t);
   // prepend(&f, c);
 
   // delete_first(&f);
+
+  delete_value(&f, 3);
+ 
 
   Node *max = max_value(f);
 
